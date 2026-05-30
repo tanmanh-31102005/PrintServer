@@ -8,7 +8,7 @@
 ![PowerShell](https://img.shields.io/badge/PowerShell-Scripts-5391FE?style=for-the-badge&logo=powershell)
 
 **Hệ thống Quản lý Máy In Tập Trung (Centralized Printer Server)**  
-*Đồ án môn Quản Trị Hệ Thống Mạng — Nhóm 6*
+*Đồ án môn Quản Trị Hệ Thống Mạng
 
 </div>
 
@@ -24,7 +24,6 @@
 - [Cấu Trúc Thư Mục](#-cấu-trúc-thư-mục)
 - [Hướng Dẫn Triển Khai](#-hướng-dẫn-triển-khai)
 - [Demo Script](#-demo-script)
-- [Nhóm Thực Hiện](#-nhóm-thực-hiện)
 
 ---
 
@@ -337,16 +336,6 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 
 ---
 
-## 👥 Nhóm Thực Hiện
-
-| MSSV | Họ và Tên | Vai Trò |
-|------|-----------|---------|
-| **52300221** | Thành viên 1 | Cấu hình Domain Controller & AD DS |
-| **52300240** | Thành viên 2 | Cấu hình Print Server & GPO |
-| **52300253** | Thành viên 3 | Cấu hình Client, Test & Báo cáo |
-
-> **Nhóm 6** — Môn: Quản Trị Hệ Thống Mạng
-
 ---
 
 ## 📚 Tài Liệu Tham Khảo
@@ -359,8 +348,6 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 ---
 
 <div align="center">
-
-**© 2025 Nhóm 6 — Quản Trị Hệ Thống Mạng**
 
 *Dự án được thực hiện cho mục đích học thuật tại trường đại học.*
 
