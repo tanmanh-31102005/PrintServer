@@ -1,0 +1,330 @@
+% =====================================================================
+% FRONTMATTER – ABSTRACT
+% =====================================================================
+
+\phantomsection
+\begin{center}
+    {\Large \textbf{TÓM TẮT}}
+\end{center}
+
+\addcontentsline{toc}{section}{TÓM TẮT}
+
+\vspace{0.8cm}
+
+\setlength{\parindent}{1.2cm}
+\setlength{\parskip}{6pt}
+
+Báo cáo cuối kỳ môn Quản trị hệ thống mạng trình bày quy trình thiết kế, triển khai và quản trị hệ thống máy in tập trung (Print Server) cho doanh nghiệp giả định ABC, sử dụng PowerShell trên nền Windows Server 2019. Hệ thống được thiết kế nhằm phục vụ nhu cầu in ấn của 3 phòng ban với yêu cầu phân quyền, kiểm soát và giám sát chi tiết.
+
+% =====================================================================
+% PHẦN 1
+% =====================================================================
+
+\section*{Phần 1: Thông tin dự án}
+\addcontentsline{toc}{section}{Phần 1: Thông tin dự án}
+
+\subsection*{1.1 Chi tiết dự án}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{11cm}|}
+\hline
+\textbf{Nội dung} & \textbf{Chi tiết} \\
+\hline
+Tên Dự Án & Triển khai Printer Server – Doanh Nghiệp ABC \\
+\hline
+Môn học & Quản trị Hệ Thống Mạng \\
+\hline
+Ngôn Ngữ & Vietnamese/English \\
+\hline
+Phiên Bản & 1.0 – Production Ready \\
+\hline
+Ngày Hoàn Thành & November 2025 \\
+\hline
+Công Nghệ & Windows Server 2019, PowerShell, Active Directory \\
+\hline
+Yêu Cầu Đặc Biệt & Triển khai hoàn toàn qua dòng lệnh – Không dùng GUI \\
+\hline
+\end{tabular}
+\caption{Thông tin tổng quan dự án}
+\label{tab:project_info}
+\end{table}
+
+\subsection*{1.2 Bối cảnh doanh nghiệp}
+
+Doanh nghiệp giả định ABC có 3 phòng ban chính với nhu cầu in ấn khác nhau:
+
+\begin{itemize}
+    \item \textbf{Phòng Thiết kế:} In màu, ưu tiên tốc độ cao.
+    \item \textbf{Phòng Văn phòng:} In đen trắng, tối ưu chi phí.
+    \item \textbf{Phòng Kế toán:} Yêu cầu bảo mật cao, theo dõi log chi tiết.
+\end{itemize}
+
+\textbf{Mục tiêu hệ thống:}
+\begin{itemize}
+    \item Tự động hóa triển khai máy in theo phòng ban.
+    \item Phân quyền dựa trên Group.
+    \item Ghi log đầy đủ quá trình in.
+    \item Xuất báo cáo thống kê theo User.
+\end{itemize}
+
+% =====================================================================
+% PHẦN 2
+% =====================================================================
+
+\section*{Phần 2: Hạ tầng hệ thống}
+\addcontentsline{toc}{section}{Phần 2: Hạ tầng hệ thống}
+
+\subsection*{2.1 Cấu hình Print Server}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{11cm}|}
+\hline
+\textbf{Thông số} & \textbf{Chi tiết} \\
+\hline
+Hostname & SRV-PRINT \\
+\hline
+OS & Windows Server 2019 Datacenter \\
+\hline
+IP Address & 192.168.244.10/24 \\
+\hline
+Gateway & 192.168.244.1 \\
+\hline
+DNS Primary & 192.168.244.10 \\
+\hline
+DNS Secondary & 8.8.8.8 \\
+\hline
+Domain & ABC.local \\
+\hline
+Vai trò & DC + Print Server + DNS + AD DS \\
+\hline
+Nền tảng & VMware Workstation Pro (Bridged) \\
+\hline
+\end{tabular}
+\caption{Thông số cấu hình Print Server}
+\label{tab:print_server_config}
+\end{table}
+
+\subsection*{2.2 Cấu trúc Active Directory}
+
+Cấu trúc được mô tả bằng dạng danh sách lồng nhau để tránh lỗi ký tự đặc biệt:
+
+\begin{itemize}
+    \item \textbf{abc.local (Forest)}
+    \begin{itemize}
+        \item \textbf{OU = Phong\_Thiet\_Ke}
+        \begin{itemize}
+            \item GRP\_Design\_Users
+            \item user\_design
+        \end{itemize}
+        \item \textbf{OU = Phong\_Van\_Phong}
+        \begin{itemize}
+            \item GRP\_Office\_Users
+            \item user\_office
+        \end{itemize}
+        \item \textbf{OU = Phong\_Ke\_Toan}
+        \begin{itemize}
+            \item GRP\_Accounting\_Users
+            \item user\_accounting
+        \end{itemize}
+        \item \textbf{OU = Printers}
+        \begin{itemize}
+            \item GPO-Printer-Distribution
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\subsection*{2.3 Dải IP và Port}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Loại} & \textbf{Dải IP} & \textbf{Số lượng} \\
+\hline
+Máy In Vật Lý & 192.168.244.201–210 & 10 ports (TCP 9100) \\
+\hline
+Client & 192.168.244.20–99 & Tùy biến \\
+\hline
+Server & 192.168.244.10 & 1 \\
+\hline
+\end{tabular}
+\caption{Phân bổ dải IP và Port}
+\label{tab:ip_port}
+\end{table}
+
+% =====================================================================
+% PHẦN 3 → 14
+% =====================================================================
+
+\section*{Phần 3: Bước chuẩn bị – Triển khai hạ tầng}
+\begin{itemize}
+    \item Thiết lập hostname, IP tĩnh.
+    \item Cài đặt Print Server, AD DS, DNS.
+    \item Tạo OU theo cấu trúc yêu cầu.
+\end{itemize}
+
+\section*{Phần 4: Tạo nhóm và người dùng}
+\begin{itemize}
+    \item Tạo nhóm phòng ban (Group).
+    \item Tạo user tương ứng.
+\end{itemize}
+
+\section*{Phần 5: Triển khai port và driver}
+\begin{itemize}
+    \item Tạo TCP/IP port cho máy in.
+    \item Kiểm tra và cài driver.
+\end{itemize}
+
+\section*{Phần 6: Tạo máy in theo phòng ban}
+\begin{itemize}
+    \item Add Printer tương ứng từng phòng.
+    \item Tạo Printer Pool khi cần.
+\end{itemize}
+
+\section*{Phần 7: Phân quyền và kiểm soát truy cập}
+\begin{itemize}
+    \item Phân quyền bằng ICACLS.
+    \item Thiết lập độ ưu tiên (Priority).
+\end{itemize}
+
+\section*{Phần 8: Phân phối máy in qua Group Policy}
+\begin{itemize}
+    \item Tạo Logon Script.
+    \item Gán Script qua GPO.
+\end{itemize}
+
+\section*{Phần 9: Cấu hình Client tham gia Domain}
+\begin{itemize}
+    \item Join Domain.
+    \item Kiểm tra máy in được map tự động.
+\end{itemize}
+
+\section*{Phần 10: Giám sát, logging và báo cáo}
+\begin{itemize}
+    \item Bật Logging PrintService.
+    \item Xuất báo cáo bằng PowerShell.
+\end{itemize}
+
+\section*{Phần 11: Kiểm thử và xác thực hệ thống}
+\begin{itemize}
+    \item Test phân quyền in.
+    \item Kiểm tra trạng thái hàng đợi.
+\end{itemize}
+
+\section*{Phần 12: Troubleshooting}
+\begin{itemize}
+    \item Client không nhận máy in.
+    \item Lỗi quyền truy cập.
+    \item Xóa job bị treo.
+\end{itemize}
+\section*{Phần 13: Kiểm tra tất cả chức năng của hệ thống}
+\section*{Phần 14: Kết luận và nhận xét}
+\addcontentsline{toc}{section}{Phần 15: Kết luận và nhận xét}
+
+\subsection*{14.1 Kết quả đạt được}
+
+\begin{itemize}
+    \item Triển khai Print Server hoàn toàn không sử dụng GUI, tất cả thao tác qua PowerShell CLI.
+    \item Phân quyền theo nhóm phòng ban, chỉ user thuộc đúng group mới truy cập được máy in.
+    \item Máy in Pool tự động chia tải, 7 máy in vật lý được quản lý bởi 1 máy in ảo.
+    \item Độ ưu tiên được thiết lập rõ ràng, máy in kế toán có mức ưu tiên cao nhất (75).
+    \item Logging và báo cáo chi tiết, có thể truy vết lịch sử in ấn theo từng user.
+    \item Tự động phân phối máy in, client tự nhận máy in khi join domain thông qua GPO.
+\end{itemize}
+
+\subsection*{14.2 Công nghệ và công cụ sử dụng}
+
+\begin{itemize}
+    \item Windows Server 2019 Datacenter.
+    \item Active Directory Domain Services (AD DS).
+    \item Print Server Role.
+    \item PowerShell 5.0+ (CLI, không dùng GUI).
+    \item Group Policy (GPO) để triển khai qua lệnh.
+    \item ICACLS dùng để phân quyền NTFS.
+    \item Event Viewer Logs để giám sát.
+\end{itemize}
+
+\subsection*{14.3 Giá trị doanh nghiệp}
+
+\begin{itemize}
+    \item Tiết kiệm chi phí: Quản lý tập trung, giảm lỗi cấu hình thủ công.
+    \item Bảo mật cao: Phân quyền rõ ràng, truy vết hoạt động chi tiết.
+    \item Hiệu suất tốt: Pool và priority đảm bảo các máy in quan trọng luôn được ưu tiên.
+    \item Dễ bảo trì: Tự động hóa qua script, dễ mở rộng khi công ty phát triển.
+\end{itemize}
+
+\section*{Phần 15: Phụ lục – Tham khảo}
+
+\subsection*{15.1 Danh sách lệnh PowerShell}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Lệnh} & \textbf{Chức năng} \\
+\hline
+Add-PrinterPort & Tạo port máy in \\
+\hline
+Add-Printer & Tạo máy in \\
+\hline
+Set-Printer & Sửa đặc tính máy in \\
+\hline
+Get-Printer & Liệt kê máy in \\
+\hline
+Get-PrintJob & Xem hàng đợi in \\
+\hline
+Remove-PrintJob & Xóa job \\
+\hline
+Restart-Service Spooler & Khởi động lại dịch vụ in \\
+\hline
+New-ADUser & Tạo user \\
+\hline
+New-ADGroup & Tạo group \\
+\hline
+Add-ADGroupMember & Thêm user vào group \\
+\hline
+Get-WinEvent & Truy vấn Event Log \\
+\hline
+icacls & Phân quyền NTFS \\
+\hline
+gpupdate /force & Cập nhật GPO \\
+\hline
+\end{tabular}
+\caption{Danh sách lệnh PowerShell chính}
+\end{table}
+
+\subsection*{15.2 Port và Protocol}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Port} & \textbf{Protocol} & \textbf{Dịch vụ} \\
+\hline
+9100 & TCP & JetDirect (Printer) \\
+\hline
+445 & TCP & SMB Sharing \\
+\hline
+139 & TCP/UDP & NetBIOS \\
+\hline
+53 & TCP/UDP & DNS \\
+\hline
+88 & TCP & Kerberos \\
+\hline
+389 & TCP/UDP & LDAP \\
+\hline
+\end{tabular}
+\caption{Port và giao thức sử dụng}
+\end{table}
+
+\subsection*{15.3 Tài liệu tham khảo}
+
+\begin{itemize}
+    \item Microsoft Learn: Print Server Role
+    \item Active Directory Best Practices
+    \item PowerShell PrintManagement Module Documentation
+    \item Group Policy Management Console Guide
+\end{itemize}
+

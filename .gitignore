@@ -1,0 +1,38 @@
+# ==============================
+# VMware Virtual Machine Files
+# ==============================
+# Bỏ qua các file VMDK (ổ đĩa ảo) - rất nặng (hàng GB)
+user/*.vmdk
+user/*.nvram
+user/*.scoreboard
+user/*.vmsd
+user/*.vmxf
+
+# Giữ lại file .vmx (config) để tham khảo
+# user/*.vmx  <-- không bỏ qua
+
+# ==============================
+# Windows Temp & System Files
+# ==============================
+Thumbs.db
+desktop.ini
+*.lnk
+$RECYCLE.BIN/
+
+# ==============================
+# Office Temp Files
+# ==============================
+~$*.docx
+~$*.xlsx
+~$*.pptx
+*.tmp
+
+# ==============================
+# ZIP / Archive (driver đã có folder rồi)
+# ==============================
+upd-pcl6-x64-7.9.0.26347.zip
+
+# ==============================
+# Cache
+# ==============================
+caches/

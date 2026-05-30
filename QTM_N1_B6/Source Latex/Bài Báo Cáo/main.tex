@@ -1,0 +1,183 @@
+\documentclass[a4paper]{report}
+\includeonly{content/Bai3}
+% --- CÁC PACKAGES VÀ THIẾT LẬP CHUNG ---
+\input{preamble.tex}
+
+\numberwithin{figure}{section} % Đánh số hình theo section
+
+% Thiết lập kích thước chữ và kiểu chữ cho các tiêu đề
+\titleformat{\section}
+  {\normalfont\bfseries\fontsize{16}{19.2}\selectfont}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\bfseries\fontsize{13}{15.6}\selectfont}
+  {\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\bfseries\fontsize{13}{15.6}\selectfont}
+  {\thesubsubsection}{1em}{}
+
+% Thiết lập cỡ chữ mặc định cho văn bản thông thường
+\renewcommand{\normalsize}{\fontsize{13}{15.6}\selectfont}
+
+% Thiết lập khoảng cách dòng
+\onehalfspacing % Sử dụng onehalfspacing cho khoảng cách dòng 1.5
+
+% Setting page geometry per specifications
+\geometry{top=3.5cm, bottom=3cm, left=3.5cm, right=2cm}
+
+% Thiết lập danh sách để tránh tràn lề
+\setlist[itemize]{align=parleft, leftmargin=*, labelsep=0.5em, itemsep=0.5em}
+\setlist[enumerate]{align=parleft, leftmargin=*, labelsep=0.5em, itemsep=0.5em}
+
+% Customizing section numbering
+\setcounter{secnumdepth}{3} 
+\setcounter{tocdepth}{2}
+
+% Setting paragraph indentation
+\setlength{\parindent}{1.25cm}
+
+% Configuring header for page numbering
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% Customizing table of contents
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsubsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsubsubsecleader}{\cftdotfill{\cftdotsep}}
+
+% Tùy chỉnh danh mục bảng biểu
+\renewcommand{\listtablename}{DANH MỤC BẢNG BIỂU}
+\renewcommand{\cfttabdotsep}{\cftdotsep}
+\renewcommand{\cfttableader}{\cftdotfill{\cfttabdotsep}}
+\setlength{\cfttabnumwidth}{3em}
+% Tùy chỉnh danh mục hình ảnh
+\renewcommand{\listfigurename}{DANH MỤC HÌNH ẢNH}
+\renewcommand{\cftfigdotsep}{\cftdotsep}
+\renewcommand{\cftfigleader}{\cftdotfill{\cftfigdotsep}}
+\setlength{\cftfignumwidth}{3em}
+
+\setlength{\parindent}{2em}
+
+% Định dạng caption
+\captionsetup[table]{position=top, skip=0pt, font=normalsize, labelfont=bf}
+\captionsetup[figure]{position=bottom, skip=10pt, font=normalsize, labelfont=bf}
+
+% --- KẾT THÚC PACKAGES VÀ THIẾT LẬP CHUNG ---
+
+\begin{document}
+\normalsize % Áp dụng cỡ chữ mặc định
+
+% --- FRONTMATTER ---
+% Trang bìa chính (titlepage.tex)
+\input{frontmatter/titlepage.tex}
+\clearpage
+
+% BẮT ĐẦU ĐÁNH SỐ LA MÃ CHO CÁC TRANG TIẾP THEO TRƯỚC MỤC LỤC
+\pagenumbering{roman} % Bắt đầu đánh số La Mã
+\setcounter{page}{3}  % Reset về iii
+%CÁC CÂU MỞ ĐẦU
+
+\input{frontmatter/acknowledgment}
+\clearpage %
+
+\input{frontmatter/declaration.tex}
+\clearpage % 
+
+% --- MỤC LỤC VÀ DANH MỤC ---
+% Tùy chỉnh tiêu đề mục lục
+\renewcommand{\contentsname}{\centerline{\normalfont\fontsize{16}{19.2}\selectfont\bfseries MỤC LỤC}}
+\setlength{\cftbeforetoctitleskip}{-20pt}
+\setlength{\cftaftertoctitleskip}{20pt}
+\renewcommand{\cftchappresnum}{Phần } % Thêm "Chương" trước số chương
+\renewcommand{\cftchapaftersnum}{.} % Thêm dấu chấm sau số chương
+\setlength{\cftchapnumwidth}{2.1cm}% Đảm bảo đủ không gian cho "Chương X"
+
+\tableofcontents
+\clearpage
+
+% Tùy chỉnh tiêu đề danh mục bảng biểu
+\renewcommand{\listtablename}{\centerline{\normalfont\fontsize{16}{19.2}\selectfont\bfseries DANH MỤC BẢNG BIỂU}}
+\setlength{\cftbeforelottitleskip}{-20pt}
+\setlength{\cftafterlottitleskip}{20pt}
+
+% Tùy chỉnh tiêu đề danh mục hình ảnh
+\renewcommand{\listfigurename}{\centerline{\normalfont\fontsize{16}{19.2}\selectfont\bfseries DANH MỤC HÌNH ẢNH}}
+\setlength{\cftbeforeloftitleskip}{-20pt}
+\setlength{\cftafterloftitleskip}{20pt}
+
+% Danh mục hình ảnh (tự động)
+\phantomsection
+\listoffigures
+\addcontentsline{toc}{section}{DANH MỤC HÌNH ẢNH}
+\clearpage
+
+\phantomsection
+\listoftables
+\addcontentsline{toc}{section}{DANH MỤC BẢNG BIỂU}
+\clearpage
+
+% --- Định dạng các phần mục ---
+\titleformat{\chapter}[display]
+  {\normalfont\Large\bfseries\filcenter}
+  {\MakeUppercase{Phần \thechapter.}}
+  {0pt}
+  {\MakeUppercase}
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+\titleformat{\section}
+  {\normalfont\fontsize{14pt}{16.8pt}\selectfont\bfseries}
+  {\thesection.}
+  {0.5em}
+  {}
+\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+\titleformat{\subsection}
+  {\normalfont\fontsize{14pt}{16.8pt}\selectfont\bfseries\itshape}
+  {\thesubsection.}
+  {0.5em}
+  {}
+\titlespacing*{\subsection}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{14pt}{16.8pt}\selectfont}
+  {\thesubsubsection.}
+  {0.5em}
+  {}
+\titlespacing*{\subsubsection}{0pt}{3ex plus 1ex minus .2ex}{1ex plus .2ex}
+
+% Cấu hình cho code PowerShell
+\lstdefinestyle{powershell}{
+    language=sh,
+    backgroundcolor=\color{blue!5},
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    frame=single,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=2,
+    showstringspaces=false
+}
+
+% --- BẮT ĐẦU NỘI DUNG CHÍNH ---
+\input{frontmatter/abstract.tex}
+\clearpage%
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% --- CONTENT ---
+\include{content/Bai1} 
+\include{content/Bai2}
+\include{content/Bai3}
+
+
+\clearpage
+
+% --- BACKMATTER ---
+% \input{backmatter/05_tai_lieu_tham_khao.tex}
+
+\end{document}

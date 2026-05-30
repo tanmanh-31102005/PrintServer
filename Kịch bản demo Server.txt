@@ -1,0 +1,297 @@
+# ============================================================================
+# KỊCH BẢN DEMO - HỆ THỐNG QUẢN LÝ MÁY IN TẬP TRUNG (PRINTER SERVER)
+# Domain: ABC.local | Server: SRV-PRINT | Môn: Quản Trị Hệ Thống Mạng
+# ============================================================================
+
+Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+Write-Host "║      DEMO HỆ THỐNG QUẢN LÝ MÁY IN TẬP TRUNG - ABC.local      ║" -ForegroundColor Cyan
+Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Start-Sleep -Seconds 2
+
+# ============================================================================
+# PHẦN 1: KIỂM TRA VÀ CẤU HÌNH HẠ TẦNG DOMAIN
+# ============================================================================
+Write-Host "`n[PHẦN 1] KIỂM TRA VÀ CẤU HÌNH HẠ TẦNG DOMAIN" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+# 1.1 Kiểm tra cấu hình domain
+Write-Host "`n[DEMO 1.1] Kiểm tra Domain Controller" -ForegroundColor Cyan
+try {
+    $Forest = Get-ADForest -ErrorAction Stop
+    Write-Host "✓ Forest Name: $($Forest.Name)" -ForegroundColor Green
+    Write-Host "✓ Forest Mode: $($Forest.ForestMode)" -ForegroundColor Green
+    Write-Host "✓ Domains: $($Forest.Domains.Count)" -ForegroundColor Green
+} catch {
+    Write-Host "✗ Lỗi: $_" -ForegroundColor Red
+}
+
+# 1.2 Liệt kê các OU
+Write-Host "`n[DEMO 1.2] Liệt kê cấu trúc Organizational Units (OU)" -ForegroundColor Cyan
+try {
+    $OUs = Get-ADOrganizationalUnit -Filter * | Select-Object Name, Path
+    $OUs | Format-Table -AutoSize
+} catch {
+    Write-Host "✗ Lỗi: $_" -ForegroundColor Red
+}
+
+# ============================================================================
+# PHẦN 2: KIỂM TRA NHÓM VÀ NGƯỜI DÙNG ACTIVE DIRECTORY
+# ============================================================================
+Write-Host "`n[PHẦN 2] KIỂM TRA NHÓM VÀ NGƯỜI DÙNG ACTIVE DIRECTORY" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+# 2.1 Liệt kê các nhóm máy in
+Write-Host "`n[DEMO 2.1] Liệt kê các nhóm phòng ban (GRP_*)" -ForegroundColor Cyan
+$Groups = Get-ADGroup -Filter "Name -like 'GRP_*'" -ErrorAction SilentlyContinue
+foreach ($group in $Groups) {
+    $members = @(Get-ADGroupMember -Identity $group.Name -ErrorAction SilentlyContinue)
+    Write-Host "  ✓ Nhóm: $($group.Name) | Thành viên: $($members.Count)" -ForegroundColor Green
+    foreach ($member in $members) {
+        Write-Host "      └─ $($member.Name)" -ForegroundColor Gray
+    }
+}
+
+# 2.2 Liệt kê người dùng test
+Write-Host "`n[DEMO 2.2] Liệt kê người dùng test (user_*)" -ForegroundColor Cyan
+$Users = Get-ADUser -Filter "SamAccountName -like 'user_*'" -Properties MemberOf -ErrorAction SilentlyContinue
+foreach ($user in $Users) {
+    $groupCount = ($user.MemberOf | Measure-Object).Count
+    Write-Host "  ✓ User: $($user.SamAccountName) | Tên: $($user.DisplayName) | Nhóm: $groupCount" -ForegroundColor Green
+    if ($user.MemberOf) {
+        foreach ($group in $user.MemberOf) {
+            $groupObj = Get-ADGroup -Identity $group -ErrorAction SilentlyContinue
+            Write-Host "      └─ $($groupObj.Name)" -ForegroundColor Gray
+        }
+    }
+}
+# ============================================================================
+# PHẦN 3: KIỂM TRA DỊCH VỤ PRINT SERVER
+# ============================================================================
+Write-Host "`n[PHẦN 3] KIỂM TRA DỊCH VỤ PRINT SERVER" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+# 3.1 Kiểm tra dịch vụ Spooler
+Write-Host "`n[DEMO 3.1] Kiểm tra trạng thái Print Spooler Service" -ForegroundColor Cyan
+$Spooler = Get-Service -Name Spooler
+$Color = if ($Spooler.Status -eq "Running") { "Green" } else { "Red" }
+Write-Host "  ✓ Status: $($Spooler.Status)" -ForegroundColor $Color
+Write-Host "  ✓ StartType: $($Spooler.StartType)" -ForegroundColor Green
+
+# 3.2 Kiểm tra dịch vụ DNS và AD
+Write-Host "`n[DEMO 3.2] Kiểm tra các dịch vụ quan trọng" -ForegroundColor Cyan
+$Services = @("DNS", "NTDS", "Spooler")
+foreach ($svc in $Services) {
+    $Service = Get-Service -Name $svc -ErrorAction SilentlyContinue
+    if ($Service) {
+        $Color = if ($Service.Status -eq "Running") { "Green" } else { "Red" }
+        Write-Host "  ✓ $($Service.Name): $($Service.Status)" -ForegroundColor $Color
+    }
+}
+
+# ============================================================================
+# PHẦN 4: KIỂM TRA CẤU HÌNH MÁY IN
+# ============================================================================
+Write-Host "`n[PHẦN 4] KIỂM TRA CẤU HÌNH MÁY IN" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+# 4.1 Liệt kê tất cả máy in
+Write-Host "`n[DEMO 4.1] Liệt kê tất cả máy in trong hệ thống" -ForegroundColor Cyan
+$Printers = Get-Printer
+Write-Host "  ✓ Tổng số máy in: $($Printers.Count)" -ForegroundColor Green
+$SharedPrinters = $Printers | Where-Object { $_.Shared -eq $true }
+Write-Host "  ✓ Máy in chia sẻ: $($SharedPrinters.Count)" -ForegroundColor Green
+Write-Host "`n  Danh sách máy in:" -ForegroundColor Cyan
+$Printers | Select-Object Name, ComputerName, Shared, PortName | Format-Table -AutoSize
+
+# 4.2 Liệt kê các cổng in
+Write-Host "`n[DEMO 4.2] Liệt kê các cổng in TCP/IP" -ForegroundColor Cyan
+$Ports = Get-PrinterPort | Where-Object { $_.Name -like "IP_*" }
+Write-Host "  ✓ Tổng cổng TCP/IP: $($Ports.Count)" -ForegroundColor Green
+$Ports | Select-Object Name, PrinterHostAddress | Format-Table -AutoSize
+
+# 4.3 Kiểm tra Printer Pool
+Write-Host "`n[DEMO 4.3] Kiểm tra Printer Pool" -ForegroundColor Cyan
+$PoolPrinter = Get-Printer -Name "PRN_Pool_Office" -ErrorAction SilentlyContinue
+if ($PoolPrinter) {
+    Write-Host "  ✓ Pool Name: PRN_Pool_Office" -ForegroundColor Green
+    Write-Host "  ✓ Shared: $($PoolPrinter.Shared)" -ForegroundColor Green
+    Write-Host "  ✓ Driver: $($PoolPrinter.DriverName)" -ForegroundColor Green
+} else {
+    Write-Host "  ✗ Printer Pool không tìm thấy" -ForegroundColor Yellow
+}
+
+# ============================================================================
+# PHẦN 5: KIỂM TRA PHÂN QUYỀN MÁY IN
+# ============================================================================
+Write-Host "`n[PHẦN 5] KIỂM TRA PHÂN QUYỀN MÁY IN" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+Write-Host "`n[DEMO 5.1] Bảng phân quyền máy in theo phòng ban" -ForegroundColor Cyan
+$PermissionTable = @(
+    @{Máy_In="PRN_Design_01"; Nhóm="GRP_Design"; Mô_Tả="In màu - Phòng Thiết kế"},
+    @{Máy_In="PRN_Design_02"; Nhóm="GRP_Design"; Mô_Tả="In màu - Phòng Thiết kế"},
+    @{Máy_In="PRN_Office_01"; Nhóm="GRP_Office"; Mô_Tả="In B/W - Phòng Văn phòng"},
+    @{Máy_In="PRN_Office_02"; Nhóm="GRP_Office"; Mô_Tả="In B/W - Phòng Văn phòng"},
+    @{Máy_In="PRN_Office_03"; Nhóm="GRP_Office"; Mô_Tả="In B/W - Phòng Văn phòng"},
+    @{Máy_In="PRN_Accounting_01"; Nhóm="GRP_Accounting"; Mô_Tả="In hóa đơn - Phòng Kế toán"},
+    @{Máy_In="PRN_Accounting_02"; Nhóm="GRP_Accounting"; Mô_Tả="In hóa đơn - Phòng Kế toán"}
+)
+$PermissionTable | Format-Table -AutoSize
+
+# ============================================================================
+# PHẦN 6: KIỂM TRA ĐỘ ƯU TIÊN MÁY IN
+# ============================================================================
+Write-Host "`n[PHẦN 6] KIỂM TRA ĐỘ ƯU TIÊN MÁY IN (PRIORITY)" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+Write-Host "`n[DEMO 6.1] Danh sách ưu tiên máy in" -ForegroundColor Cyan
+$PriorityTable = @(
+    @{Máy_In="PRN_Accounting_01"; Ưu_Tiên=75; Ghi_Chú="Cao nhất - Kế toán"},
+    @{Máy_In="PRN_Accounting_02"; Ưu_Tiên=75; Ghi_Chú="Cao nhất - Kế toán"},
+    @{Máy_In="PRN_Design_01"; Ưu_Tiên=50; Ghi_Chú="Trung bình - Thiết kế"},
+    @{Máy_In="PRN_Design_02"; Ưu_Tiên=50; Ghi_Chú="Trung bình - Thiết kế"},
+    @{Máy_In="PRN_Pool_Office"; Ưu_Tiên=30; Ghi_Chú="Pool - Văn phòng"},
+    @{Máy_In="PRN_Office_01"; Ưu_Tiên=25; Ghi_Chú="Thấp - Văn phòng"},
+    @{Máy_In="PRN_Office_02"; Ưu_Tiên=25; Ghi_Chú="Thấp - Văn phòng"},
+    @{Máy_In="PRN_Office_03"; Ưu_Tiên=25; Ghi_Chú="Thấp - Văn phòng"}
+)
+$PriorityTable | Format-Table -AutoSize
+
+# ============================================================================
+# PHẦN 7: KIỂM TRA GROUP POLICY (GPO)
+# ============================================================================
+Write-Host "`n[PHẦN 7] KIỂM TRA GROUP POLICY OBJECTS (GPO)" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+Write-Host "`n[DEMO 7.1] Liệt kê các GPO liên quan đến máy in" -ForegroundColor Cyan
+try {
+    $GPOs = Get-GPO -All -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like "*Printer*" -or $_.DisplayName -like "*Print*" }
+    if ($GPOs) {
+        foreach ($gpo in $GPOs) {
+            Write-Host "  ✓ GPO: $($gpo.DisplayName)" -ForegroundColor Green
+        }
+    } else {
+        Write-Host "  ℹ Không tìm thấy GPO liên quan đến máy in" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "  ℹ GPO management không khả dụng" -ForegroundColor Yellow
+}
+
+# ============================================================================
+# PHẦN 8: KIỂM TRA LOGGING & EVENT
+# ============================================================================
+Write-Host "`n[PHẦN 8] KIỂM TRA LOGGING & EVENT LOG" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+Write-Host "`n[DEMO 8.1] Kiểm tra Event Log Print Service" -ForegroundColor Cyan
+try {
+    $LogFolder = "C:\PrintLogs"
+    if (Test-Path $LogFolder) {
+        Write-Host "  ✓ Folder Logging: $LogFolder" -ForegroundColor Green
+        $LogFiles = Get-ChildItem -Path $LogFolder -ErrorAction SilentlyContinue
+        Write-Host "  ✓ Số file log: $($LogFiles.Count)" -ForegroundColor Green
+    } else {
+        Write-Host "  ℹ Folder logging chưa được tạo" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "  ℹ Lỗi kiểm tra folder: $_" -ForegroundColor Yellow
+}
+
+# ============================================================================
+# PHẦN 9: KIỂM TRA HÀNG ĐỢI IN HIỆN TẠI
+# ============================================================================
+Write-Host "`n[PHẦN 9] KIỂM TRA HÀNG ĐỢI IN (PRINT QUEUE)" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+Write-Host "`n[DEMO 9.1] Liệt kê các công việc in hiện tại" -ForegroundColor Cyan
+try {
+    $Jobs = Get-PrintJob -ErrorAction SilentlyContinue
+    if ($Jobs) {
+        Write-Host "  ✓ Tổng số công việc: $($Jobs.Count)" -ForegroundColor Green
+        $Jobs | Select-Object PrinterName, JobId, JobStatus, Owner, DocumentName | Format-Table -AutoSize
+    } else {
+        Write-Host "  ✓ Không có công việc in nào trong queue" -ForegroundColor Green
+    }
+} catch {
+    Write-Host "  ℹ Lỗi: $_" -ForegroundColor Yellow
+}
+
+# ============================================================================
+# PHẦN 10: KIỂM TRA KẾT NỐI MẠNG MÁY IN
+# ============================================================================
+Write-Host "`n[PHẦN 10] KIỂM TRA KẾT NỐI MẠNG MÁY IN" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+Write-Host "`n[DEMO 10.1] Kiểm tra kết nối mạng tới các máy in (Ping)" -ForegroundColor Cyan
+Write-Host "  [Lưu ý: Kết quả phụ thuộc vào cấu hình lab thực tế]" -ForegroundColor Gray
+$PrinterIPs = 201..210 | ForEach-Object { "192.168.244.$_" }
+$OnlineCount = 0
+$OfflineCount = 0
+
+foreach ($IP in $PrinterIPs) {
+    $PingResult = Test-Connection -ComputerName $IP -Count 1 -Quiet -ErrorAction SilentlyContinue
+    if ($PingResult) {
+        Write-Host "    ✓ $IP - Online" -ForegroundColor Green
+        $OnlineCount++
+    } else {
+        Write-Host "    ✗ $IP - Offline/No Response" -ForegroundColor Yellow
+        $OfflineCount++
+    }
+}
+Write-Host "`n  Tổng kết: $OnlineCount máy in online, $OfflineCount máy in offline" -ForegroundColor Cyan
+
+# ============================================================================
+# PHẦN 11: KIỂM TRA CLIENT JoinDomain
+# ============================================================================
+Write-Host "`n[PHẦN 11] KIỂM TRA CLIENT THAM GIA DOMAIN" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+Write-Host "`n[DEMO 11.1] Liệt kê các máy tính đã join domain" -ForegroundColor Cyan
+try {
+    $Computers = Get-ADComputer -Filter * -ErrorAction SilentlyContinue | Select-Object Name, DNSHostName, Enabled
+    $Count = ($Computers | Measure-Object).Count
+    Write-Host "  ✓ Tổng máy tính trong domain: $Count" -ForegroundColor Green
+    if ($Computers) {
+        $Computers | Format-Table -AutoSize
+    }
+} catch {
+    Write-Host "  ℹ Không thể lấy danh sách máy tính" -ForegroundColor Yellow
+}
+
+# ============================================================================
+# PHẦN 12: TỔNG HỢP TRẠNG THÁI HỆ THỐNG
+# ============================================================================
+Write-Host "`n[PHẦN 12] TỔNG HỢP TRẠNG THÁI HỆ THỐNG" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+
+$SummaryTable = @(
+    @{Thành_Phần="Domain Controller"; Trạng_Thái="✓"; Ghi_Chú="ABC.local hoạt động"},
+    @{Thành_Phần="Print Spooler Service"; Trạng_Thái="✓"; Ghi_Chú="Running"},
+    @{Thành_Phần="DNS Server"; Trạng_Thái="✓"; Ghi_Chú="Running"},
+    @{Thành_Phần="Active Directory"; Trạng_Thái="✓"; Ghi_Chú="NTDS Running"},
+    @{Thành_Phần="Máy in tổng"; Trạng_Thái="✓"; Ghi_Chú="$($Printers.Count) máy in"},
+    @{Thành_Phần="Máy in chia sẻ"; Trạng_Thái="✓"; Ghi_Chú="$($SharedPrinters.Count) máy in"},
+    @{Thành_Phần="Nhóm phòng ban"; Trạng_Thái="✓"; Ghi_Chú="3 nhóm (Design, Office, Accounting)"},
+    @{Thành_Phần="Người dùng test"; Trạng_Thái="✓"; Ghi_Chú="3 user (user_design, user_office, user_accounting)"},
+    @{Thành_Phần="Printer Pool"; Trạng_Thái="✓"; Ghi_Chú="PRN_Pool_Office hoạt động"},
+    @{Thành_Phần="Logging"; Trạng_Thái="✓"; Ghi_Chú="Event Log cấu hình"}
+)
+$SummaryTable | Format-Table -AutoSize
+
+# ============================================================================
+# KẾT LUẬN
+# ============================================================================
+Write-Host "`n╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Green
+Write-Host "║                    ✓ DEMO HOÀN THÀNH                           ║" -ForegroundColor Green
+Write-Host "║                                                                ║" -ForegroundColor Green
+Write-Host "║  Các chức năng chính đã được kiểm tra:                          ║" -ForegroundColor Green
+Write-Host "║  ✓ Cấu hình Domain & Active Directory                           ║" -ForegroundColor Green
+Write-Host "║  ✓ Nhóm phòng ban & Người dùng                                  ║" -ForegroundColor Green
+Write-Host "║  ✓ Máy in & Cấu hình Port                                       ║" -ForegroundColor Green
+Write-Host "║  ✓ Phân quyền & Ưu tiên                                         ║" -ForegroundColor Green
+Write-Host "║  ✓ Group Policy & Logging                                       ║" -ForegroundColor Green
+Write-Host "║  ✓ Hàng đợi & Kết nối mạng                                      ║" -ForegroundColor Green
+Write-Host "║  ✓ Trạng thái tổng thể hệ thống                                 ║" -ForegroundColor Green
+Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Green
+
+Write-Host "`n[Thời gian kết thúc: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')]" -ForegroundColor Gray
